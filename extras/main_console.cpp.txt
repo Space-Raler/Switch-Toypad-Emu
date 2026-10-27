@@ -1,0 +1,360 @@
+// Skylanders Portal for Switch: UI and app logic.
+//
+// Put figure dumps (exactly 1024 bytes each) in sdmc:/switch/skyportal/figures/,
+// plug the Switch into the console/PC running the game with a USB-C cable, then
+// load figures onto the "portal" from this screen.
+#include <switch.h>
+
+#include <cstdarg>
+#include <cstdio>
+#include <cstring>
+#include <string>
+#include <vector>
+
+#include "figures.h"
+#include "usb_device.h"
+
+using namespace sky;
+
+namespace {
+
+const char* const kBaseDir = "sdmc:/switch/skyportal";
+const char* const kFigureDir = "sdmc:/switch/skyportal/figures";
+
+enum class Pane { Files, Slots };
+enum class Page { Main, Debug };
+
+struct SlotView {
+    bool present = false;
+    uint8_t status = 0;
+    bool dirty = false;
+    std::string tag;
+    std::string uid;
+};
+
+class App {
+public:
+    App() : usb_(shared_) {}
+
+    int run();
+
+private:
+    void rescan();
+    void loadSelectedFile();
+    void removeSlot(int slot);
+    void removeAll();
+    void flushDirty();
+    void setMessage(const char* fmt, ...) __attribute__((format(printf, 2, 3)));
+    SlotView viewSlot(int i);
+    void draw();
+    void drawMain(const UsbDiag& d);
+    void drawDebug(const UsbDiag& d);
+    void handleInput(u64 down, u64 held);
+
+    Shared shared_;
+    UsbDevice usb_;
+    Result usbStartResult_ = 0;
+
+    std::vector<FigureFile> files_;
+    int fileCursor_ = 0;
+    int slotCursor_ = 0;
+    Pane pane_ = Pane::Files;
+    Page page_ = Page::Main;
+    bool quit_ = false;
+    bool dirtyScreen_ = true;
+
+    char message_[96] = "";
+    int messageFrames_ = 0;
+};
+
+const char* usbStateName(UsbState s) {
+    switch (s) {
+        case UsbState_Detached: return "Not connected";
+        case UsbState_Attached: return "Attached";
+        case UsbState_Powered: return "Powered";
+        case UsbState_Default: return "Reset";
+        case UsbState_Address: return "Addressed";
+        case UsbState_Configured: return "Connected";
+        case UsbState_Suspended: return "Suspended";
+    }
+    return "?";
+}
+
+const char* speedName(UsbDeviceSpeed s) {
+    switch (s) {
+        case UsbDeviceSpeed_Low: return "low";
+        case UsbDeviceSpeed_Full: return "full";
+        case UsbDeviceSpeed_High: return "high";
+        case UsbDeviceSpeed_Super: return "super";
+        default: return "-";
+    }
+}
+
+const char* slotStatusName(uint8_t s) {
+    switch (s & 3) {
+        case 0: return "empty";
+        case 1: return "on portal";
+        case 2: return "removing";
+        default: return "arriving";
+    }
+}
+
+std::string baseName(const std::string& path) {
+    const size_t p = path.find_last_of('/');
+    return p == std::string::npos ? path : path.substr(p + 1);
+}
+
+std::string clip(const std::string& s, size_t n) {
+    return s.size() <= n ? s : s.substr(0, n - 1) + "~";
+}
+
+void App::setMessage(const char* fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    std::vsnprintf(message_, sizeof message_, fmt, ap);
+    va_end(ap);
+    messageFrames_ = 60 * 6;
+    dirtyScreen_ = true;
+}
+
+SlotView App::viewSlot(int i) {
+    ScopedLock lock(shared_.mutex);
+    const Slot& s = shared_.portal.slot(i);
+    SlotView v;
+    v.present = s.present();
+    v.status = s.status;
+    v.dirty = s.dirty;
+    v.tag = s.tag;
+    if (v.present) v.uid = figureUidString(s.data.data());
+    return v;
+}
+
+void App::rescan() {
+    files_ = scanFigures(kFigureDir);
+    if (fileCursor_ >= int(files_.size())) fileCursor_ = files_.empty() ? 0 : int(files_.size()) - 1;
+    setMessage("%d figure file(s) in %s", int(files_.size()), kFigureDir);
+}
+
+void App::loadSelectedFile() {
+    if (files_.empty()) {
+        setMessage("No figure files. Copy 1024-byte dumps to %s", kFigureDir);
+        return;
+    }
+    const FigureFile& f = files_[size_t(fileCursor_)];
+
+    std::array<uint8_t, kFigureSize> data;
+    if (!readFigure(f.path, data)) {
+        setMessage("Could not read %s (must be exactly %d bytes)", f.name.c_str(), int(kFigureSize));
+        return;
+    }
+
+    int slot = -1;
+    {
+        ScopedLock lock(shared_.mutex);
+        // The game would see two figures with one identity; that confuses it and
+        // two slots would fight over the same file when saving.
+        const std::string uid = figureUidString(data.data());
+        for (int i = 0; i < kSlots; ++i) {
+            const Slot& s = shared_.portal.slot(i);
+            if (s.present() && (s.tag == f.path || figureUidString(s.data.data()) == uid)) {
+                setMessage("%s is already on the portal (slot %d)", f.name.c_str(), i);
+                return;
+            }
+        }
+        slot = shared_.portal.loadFigure(data.data(), data.size(), f.path);
+    }
+    if (slot < 0) setMessage("Portal is full (%d figures)", kSlots);
+    else setMessage("Placed %s in slot %d", f.name.c_str(), slot);
+}
+
+void App::flushDirty() {
+    for (int i = 0; i < kSlots; ++i) {
+        std::array<uint8_t, kFigureSize> data;
+        std::string tag;
+        bool have;
+        {
+            ScopedLock lock(shared_.mutex);
+            have = shared_.portal.takeDirty(i, data, tag);
+        }
+        if (!have) continue;
+        std::string err;
+        if (saveFigure(tag, data, err)) {
+            setMessage("Saved %s", baseName(tag).c_str());
+        } else {
+            ScopedLock lock(shared_.mutex);
+            shared_.portal.markDirty(i);  // retry on the next flush
+            setMessage("SAVE FAILED %s: %s", baseName(tag).c_str(), err.c_str());
+        }
+    }
+}
+
+void App::removeSlot(int slot) {
+    if (!viewSlot(slot).present) return;
+    flushDirty();  // removeFigure() discards unsaved changes, so save first
+    ScopedLock lock(shared_.mutex);
+    if (shared_.portal.slot(slot).dirty) {
+        setMessage("Slot %d has unsaved changes that could not be saved; not removed", slot);
+        return;
+    }
+    shared_.portal.removeFigure(slot);
+    setMessage("Removed figure from slot %d", slot);
+}
+
+void App::removeAll() {
+    flushDirty();
+    ScopedLock lock(shared_.mutex);
+    for (int i = 0; i < kSlots; ++i) {
+        if (shared_.portal.slot(i).dirty) {
+            setMessage("Unsaved changes in slot %d could not be saved; nothing removed", i);
+            return;
+        }
+    }
+    shared_.portal.removeAll();
+    setMessage("Portal cleared");
+}
+
+void App::handleInput(u64 down, u64 held) {
+    (void)held;
+    if (down & HidNpadButton_Plus) quit_ = true;
+    if (down & HidNpadButton_X) page_ = (page_ == Page::Main) ? Page::Debug : Page::Main;
+    if (down & HidNpadButton_Y) pane_ = (pane_ == Pane::Files) ? Pane::Slots : Pane::Files;
+    if (down & HidNpadButton_R) rescan();
+    if (down & HidNpadButton_Minus) removeAll();
+
+    int dy = 0;
+    if (down & HidNpadButton_Up) dy = -1;
+    if (down & HidNpadButton_Down) dy = 1;
+    if (down & HidNpadButton_Left) dy = -5;
+    if (down & HidNpadButton_Right) dy = 5;
+    if (dy != 0) {
+        if (pane_ == Pane::Files) {
+            const int n = int(files_.size());
+            if (n > 0) fileCursor_ = (fileCursor_ + dy + n) % n;
+        } else {
+            slotCursor_ = (slotCursor_ + dy + kSlots) % kSlots;
+        }
+    }
+
+    if (down & HidNpadButton_A) {
+        if (pane_ == Pane::Files) loadSelectedFile();
+        else removeSlot(slotCursor_);
+    }
+    dirtyScreen_ = true;
+}
+
+void App::drawMain(const UsbDiag& d) {
+    // Portal status
+    bool activated;
+    uint8_t r, g, b;
+    Stats st;
+    {
+        ScopedLock lock(shared_.mutex);
+        activated = shared_.portal.activated();
+        r = shared_.portal.ledR();
+        g = shared_.portal.ledG();
+        b = shared_.portal.ledB();
+        st = shared_.portal.stats();
+    }
+
+    if (R_FAILED(usbStartResult_)) {
+        std::printf("USB: FAILED to start (2%03d-%04d)\n", R_MODULE(usbStartResult_), R_DESCRIPTION(usbStartResult_));
+    } else {
+        std::printf("USB: %s (%s speed)   Game: %s   Ring LED: %u,%u,%u\n", usbStateName(d.state),
+                    speedName(d.speed), activated ? "ACTIVE" : "waiting", r, g, b);
+    }
+    std::printf("Commands: %u  last '%c' %02X %02X   unknown: %u   status polls: %u\n\n", st.commands,
+                (st.lastCommand >= 0x20 && st.lastCommand < 0x7F) ? st.lastCommand : '.', st.lastArg1,
+                st.lastArg2, st.unknown, st.statusReports);
+
+    std::printf("PORTAL SLOTS %s\n", pane_ == Pane::Slots ? "(Y: back to files, A: remove)" : "");
+    for (int i = 0; i < kSlots; ++i) {
+        const SlotView v = viewSlot(i);
+        const char cur = (pane_ == Pane::Slots && i == slotCursor_) ? '>' : ' ';
+        if (v.present) {
+            std::printf("%c%2d %s  %-44s %s%s\n", cur, i, v.uid.c_str(), clip(baseName(v.tag), 44).c_str(),
+                        v.dirty ? "[unsaved] " : "", (v.status & 2) ? slotStatusName(v.status) : "");
+        } else {
+            std::printf("%c%2d --          %s\n", cur, i, (v.status & 2) ? "removing" : "");
+        }
+    }
+
+    std::printf("\nFIGURE FILES in %s %s\n", kFigureDir, pane_ == Pane::Files ? "(A: put on portal)" : "");
+    const int rows = 12;
+    const int n = int(files_.size());
+    if (n == 0) {
+        std::printf("  (none - copy 1024-byte dumps here, then press R)\n");
+    } else {
+        int first = fileCursor_ - rows / 2;
+        if (first < 0) first = 0;
+        if (first > n - rows) first = n > rows ? n - rows : 0;
+        for (int i = first; i < n && i < first + rows; ++i) {
+            const char cur = (pane_ == Pane::Files && i == fileCursor_) ? '>' : ' ';
+            std::printf("%c %s\n", cur, clip(files_[size_t(i)].name, 74).c_str());
+        }
+    }
+}
+
+void App::drawDebug(const UsbDiag& d) {
+    std::printf("USB DEBUG\n");
+    std::printf("state=%s speed=%s configured=%u setup=%u in=%u out=%u errors=%u lastErr=0x%X\n\n",
+                usbStateName(d.state), speedName(d.speed), d.configurations, d.setupRequests, d.inCompleted,
+                d.outCompleted, d.errors, d.lastError);
+    for (int i = 0; i < UsbDiag::kLogLines; ++i) std::printf("%s\n", d.log[i]);
+    std::printf("\nIf a game does not see the portal, note what is listed above.\n");
+}
+
+void App::draw() {
+    const UsbDiag d = usb_.diag();
+    consoleClear();
+    std::printf("SKYLANDERS PORTAL\n\n");
+    if (page_ == Page::Main) drawMain(d);
+    else drawDebug(d);
+
+    std::printf("\x1b[42;1H");  // jump near the bottom
+    if (messageFrames_ > 0) std::printf("%s\n", message_);
+    else std::printf("\n");
+    std::printf("D-pad: move  A: select  Y: files/slots  X: debug  R: rescan  -: clear portal  +: quit");
+    consoleUpdate(nullptr);
+}
+
+int App::run() {
+    consoleInit(nullptr);
+    padConfigureInput(1, HidNpadStyleSet_NpadStandard);
+    PadState pad;
+    padInitializeDefault(&pad);
+
+    ensureDirectory(kBaseDir);
+    ensureDirectory(kFigureDir);
+    rescan();
+
+    usbStartResult_ = usb_.start();
+    if (R_FAILED(usbStartResult_)) setMessage("USB start failed: 0x%X", usbStartResult_);
+
+    int frame = 0;
+    while (appletMainLoop() && !quit_) {
+        padUpdate(&pad);
+        const u64 down = padGetButtonsDown(&pad);
+        if (down) handleInput(down, padGetButtons(&pad));
+
+        if (++frame % 60 == 0) flushDirty();  // about once a second
+        if (messageFrames_ > 0 && --messageFrames_ == 0) dirtyScreen_ = true;
+        if (dirtyScreen_ || frame % 6 == 0) {
+            draw();
+            dirtyScreen_ = false;
+        } else {
+            consoleUpdate(nullptr);  // keeps the frame pacing
+        }
+    }
+
+    flushDirty();
+    usb_.stop();
+    consoleExit(nullptr);
+    return 0;
+}
+
+}  // namespace
+
+int main(int, char**) {
+    App app;
+    return app.run();
+}
