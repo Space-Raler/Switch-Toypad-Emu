@@ -1,7 +1,7 @@
 #---------------------------------------------------------------------------------
-# Skylanders Portal for Switch. Standard devkitPro / libnx application Makefile.
+# Toypad-Emu for Switch. Standard devkitPro / libnx application Makefile.
 #
-#   make            builds skyportal.nro
+#   make            builds Toypad-Emu.nro
 #   make clean
 #   make test       builds and runs the host-side tests (needs only gcc/g++, no devkitPro)
 #---------------------------------------------------------------------------------
@@ -23,14 +23,14 @@ TOPDIR ?= $(CURDIR)
 # SOURCES is a list of directories containing source code
 # INCLUDES is a list of directories containing header files
 #---------------------------------------------------------------------------------
-TARGET      := skyportal
+TARGET      := Toypad-Emu
 BUILD       := build
 SOURCES     := source source/infinity
 DATA        := data
 INCLUDES    := source source/infinity
 
-APP_TITLE   := Skylanders Portal
-APP_AUTHOR  := skyportal
+APP_TITLE   := Toypad-Emu
+APP_AUTHOR  := Space-Raler
 APP_VERSION := 0.4.0
 
 ARCH    := -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
@@ -86,6 +86,7 @@ export INCLUDE := $(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 export LIBPATHS := $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
 export NROFLAGS += --nacp=$(CURDIR)/$(TARGET).nacp
+export NROFLAGS += --icon=$(CURDIR)/icon.jpg
 export APP_TITLE APP_AUTHOR APP_VERSION
 
 .PHONY: $(BUILD) clean all test
@@ -99,7 +100,7 @@ $(BUILD):
 clean:
 	@echo clean ...
 	@rm -fr $(BUILD) $(TARGET).nro $(TARGET).nacp $(TARGET).elf $(TARGET).pfs0 $(TARGET).nso \
-	        tests/portal_test tests/hid_test tests/figures_test tests/infinity_test tests/lego_function_test tests/lego_dimensions_protocol_test tests/inf_*.o tests/breadcrumb_test tests/breadcrumb_test.log
+	        tests/portal_test tests/hid_test tests/figures_test tests/infinity_test tests/lego_function_test tests/lego_dimensions_protocol_test tests/inf_*.o tests/breadcrumb_test tests/breadcrumb_test.log tests/web_test
 
 # Host tests: the protocol core, USB/HID descriptors and figure files, on the PC.
 HOSTCXX ?= g++
@@ -117,6 +118,7 @@ test:
 	$(HOSTCXX) $(HOSTFLAGS) -DINF_ENABLE_BLANK_FIGURES tests/infinity_test.cpp source/infinity_function.cpp source/hid_function.cpp source/figures.cpp source/portal.cpp tests/inf_core.o tests/inf_crypto.o tests/inf_figures.o -o tests/infinity_test
 	$(HOSTCXX) $(HOSTFLAGS) tests/lego_function_test.cpp source/lego_dimensions_function.cpp source/lego_dimensions_protocol.cpp source/hid_function.cpp source/portal.cpp -o tests/lego_function_test
 	$(HOSTCXX) $(HOSTFLAGS) tests/lego_dimensions_protocol_test.cpp source/lego_dimensions_protocol.cpp -o tests/lego_dimensions_protocol_test
+	$(HOSTCXX) $(HOSTFLAGS) tests/web_test.cpp source/web_server.cpp source/web_api.cpp source/web_page.cpp -pthread -o tests/web_test
 	$(HOSTCXX) $(HOSTFLAGS) -DSKY_CRUMB_PATH='"tests/breadcrumb_test.log"' tests/breadcrumb_test.cpp -o tests/breadcrumb_test
 	tests/portal_test
 	tests/hid_test
@@ -125,6 +127,7 @@ test:
 	tests/lego_function_test
 	tests/lego_dimensions_protocol_test
 	tests/breadcrumb_test
+	tests/web_test
 
 #---------------------------------------------------------------------------------
 else
@@ -134,7 +137,7 @@ DEPENDS := $(OFILES:.o=.d)
 
 all: $(OUTPUT).nro
 
-$(OUTPUT).nro: $(OUTPUT).elf $(OUTPUT).nacp
+$(OUTPUT).nro: $(OUTPUT).elf $(OUTPUT).nacp $(TOPDIR)/icon.jpg
 $(OUTPUT).elf: $(OFILES)
 
 $(OFILES_SRC): $(HFILES_BIN)

@@ -263,7 +263,7 @@ static std::vector<uint8_t> readAll(const std::string& path) {
 }
 
 static void testFigureFiles() {
-    char tmpl[] = "/tmp/skyportal_inf_test_XXXXXX";
+    char tmpl[] = "/tmp/toypad_emu_inf_test_XXXXXX";
     CHECK(mkdtemp(tmpl) != nullptr);
     const std::string dir = tmpl;
 

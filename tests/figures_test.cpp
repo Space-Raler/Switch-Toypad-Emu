@@ -46,7 +46,7 @@ static bool exists(const std::string& path) {
 }
 
 int main() {
-    char tmpl[] = "/tmp/skyportal_test_XXXXXX";
+    char tmpl[] = "/tmp/toypad_emu_test_XXXXXX";
     CHECK(mkdtemp(tmpl) != nullptr);
     const std::string root = tmpl;
     const std::string dir = root + "/a/b/figures";

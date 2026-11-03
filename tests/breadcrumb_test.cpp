@@ -23,7 +23,7 @@ int main() {
     std::remove(SKY_CRUMB_PATH);
     sky::crumbReset();
     std::string s = slurp();
-    CHECK(s.find("skyportal startup") != std::string::npos);
+    CHECK(s.find("Toypad-Emu startup") != std::string::npos);
 
     sky::crumb("step %d: %s", 1, "sdl init");
     // Read back WITHOUT any flush/close call from the test: a crash right after crumb() must not lose the line.

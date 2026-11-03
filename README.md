@@ -1,4 +1,9 @@
-# SkyPortal Switch — Skylanders, Disney Infinity, and LEGO Dimensions
+# Toypad-Emu — Skylanders, Disney Infinity, and LEGO Dimensions
+
+<p align="center">
+  <img src="screenshots/lego-dimensions-toypad.jpg" alt="LEGO Dimensions ToyPad mode" width="49%">
+  <img src="screenshots/skylanders-portal.jpg" alt="Skylanders Portal mode" width="49%">
+</p>
 
 Makes a Nintendo Switch act as a Skylanders **Portal of Power**, a **Disney Infinity base**, or a **LEGO Dimensions ToyPad** over USB. Connect the Switch to the console/PC running the game and choose a mode from the UI. Press **L** (or tap *Switch mode*) to cycle through all three modes; the app remembers the last one.
 
@@ -15,7 +20,7 @@ Makes a Nintendo Switch act as a Skylanders **Portal of Power**, a **Disney Infi
 | Figure files: scan / load / safe save (`figures.*`) | done, 42 host checks |
 | libnx USB device layer (`usb_device.*`) | written; checked against libnx's real headers and a simulated USB host (see below). **has ran on a real Switch.** |
 | UI (`main.cpp`) | **new: graphical SDL2 UI with touch support.** Syntax-checked against stand-in headers only; not built against real SDL2/libnx, not yet seen on screen. The old text UI is in `extras/main_console.cpp.txt` |
-| `Makefile` | standard devkitPro template; the updated source in this package builds `skyportal.nro` with devkitPro, but hardware behavior still needs testing |
+| `Makefile` | standard devkitPro template; the updated source in this package builds `Toypad-Emu.nro` with devkitPro, but hardware behavior still needs testing |
 | v17 | **LEGO "Game: connected" + automatic re-plug.** The LEGO pill was hard-wired to "waiting"; it now turns green once the game has sent its wake command (and back to waiting after a bus reset). New `auto_replug=1` / `auto_replug_after=8` in usb.ini (all modes): while the console is linked but the game has not started using the device, or enumeration is stuck for 6 s, the app detaches and re-attaches by itself (every `auto_replug_after` seconds for 3 tries, then every 20 s; it stops when the game talks to us and starts over after a real unplug). A missing `lego_strings` now defaults to 1 as documented (an old usb.ini has no lego_ lines). Cancelled transfers when the console drops the connection are no longer counted as errors. LEGO test updated for the v16 wake reply. Host tests pass; **not run on hardware, and the .nro is NOT rebuilt in this package** |
 | v15 | **Portal UI and library tools.** LEGO ToyPad visual layout and quick-swap, persistent favorites, recursive game-folder scanning, and game filters for Skylanders / Disney Infinity. The updated source builds here; hardware behavior still needs testing |
 | v13 | **LEGO Dimensions mode.** Adds the `0E6F:0241` ToyPad identity, seven positions, wake/read/write/model/seed/challenge commands, synthetic test profiles, and persistence of profile writes. Host-tested only; not yet verified on Switch/PS5 hardware |
@@ -31,17 +36,17 @@ Needs [devkitPro](https://devkitpro.org/wiki/Getting_Started) with the `switch-d
     sudo dkp-pacman -S switch-sdl2 switch-sdl2_ttf     # (or: pacman -S ... in the devkitPro MSYS2 shell)
 
     export DEVKITPRO=/opt/devkitpro
-    make            # -> skyportal.nro
+    make            # -> Toypad-Emu.nro
     make test       # host tests only, needs just g++ (no devkitPro)
 
-Copy `skyportal.nro` to `sd:/switch/` and launch it from the Homebrew Menu.
+Copy `Toypad-Emu.nro` to `sd:/switch/` and launch it from the Homebrew Menu.
 
 ## Disney Infinity mode
 
 Press **L** (or tap *Switch mode (L)*) to cycle from Skylanders to Disney Infinity, then LEGO Dimensions, then back to Skylanders. Switching drops USB briefly so the host sees the selected device re-enumerate.
 
 1. Put your own Infinity figure dumps (exactly **320 bytes** each, any file name) in
-   `sd:/switch/skyportal/infinity/` (created on first launch). The app ships none and cannot
+   `sd:/switch/Toypad-Emu/infinity/` (created on first launch). The app ships none and cannot
    create figures. Keep backups.
 2. Plug the Switch into the console / PC running the game, wait for "Console linked", start the game.
 3. Highlight a file and press **A** (or tap it): the app reads the figure number from the dump and
@@ -71,7 +76,7 @@ are trademarks of their owners.
 ## Use
 
 1. Put figure dumps (exactly **1024 bytes** each, any file name) in
-   `sd:/switch/skyportal/figures/`. The app creates the folder on first launch.
+   `sd:/switch/Toypad-Emu/figures/`. The app creates the folder on first launch.
 2. Launch the app, connect the Switch to the game machine with a USB-C cable
    (use a USB-A to USB-C cable into a console/PC; handheld mode).
 3. Pick a file and press **A** to put it on the portal; the game sees it arrive.
@@ -167,10 +172,48 @@ firmware 0x1B, a leading HID report ID 0 is skipped, and interrupt-OUT packets a
 speaker audio (never as commands) while the game has the speaker on ('M').
 
 
+## Local website (v18)
+
+The app runs a small web server so you can load figures from a phone or PC browser on the same
+Wi-Fi. While the app is open and the Switch is online, the footer shows the address
+(`Website: http://<switch-ip>:8080`). Open it in any browser.
+
+The page shows the same three modes as the app and can: switch mode, place a figure from the library
+(search, game filter, favorites, LEGO character/vehicle filter), choose the target position first on
+Infinity / LEGO, take a figure off, move a LEGO token between pads, clear, re-plug USB, rescan, star
+favorites (shared with the on-screen list), and **upload** dumps (exactly the mode's file size) into the
+mode's folder. Saves of in-game progress work as before. Existing names are never overwritten
+(`name (2).bin`).
+
+`sdmc:/switch/Toypad-Emu/web.ini` (optional):
+
+    enabled=1       0 = never start the server
+    port=8080       1024..65535
+
+**Your own website.** If `sdmc:/switch/Toypad-Emu/web/index.html` exists it is served instead of the
+built-in page, and other files in that folder (`.js .css .png .svg .json ...`) are served next to it, so a
+combined site can live there. It talks to the app through:
+
+    GET  /api/state   current mode, slots, USB / game status, last message
+    GET  /api/files   every figure file in the current mode's folder (+ favorite, game, vehicle flags)
+    POST /api/<load|remove|move|clear|mode|favorite|rescan|replug|upload>?...   (header X-Requested-With: Toypad-Emu)
+
+**Security.** There is no password: anyone on your network can open the page, move figures and upload
+files of the right size to the figure folders. Use it on a network you trust, or set `enabled=0`. The
+server only opens files the app itself listed, cannot write outside the figure folder, and rejects POSTs
+without the custom header, so a web page on the internet cannot drive it through your browser. The server
+is plain HTTP, one connection at a time.
+
+Layout: `source/web_server.*` (sockets), `source/web_api.*` (routing, upload-name rules, hand-over to the
+UI thread), `source/web_page.cpp` (built-in page), `tests/web_test.cpp` (`make test`: 49 checks, including a
+real loopback round trip). **Not tested on hardware or in a browser**: the new code was only compiled
+on a PC and syntax-checked against stand-ins for libnx; the page's JavaScript was only syntax-checked.
+The `.nro` in this package is NOT rebuilt.
+
 ## Portal UI, quick-swap, favorites, and game filters (v15)
 
 - LEGO Dimensions uses a ToyPad illustration with seven circular pads rather than a generic slot grid. Tap a filled pad to select its token, then tap an empty pad to move it to that position; tap the selected pad again to remove it. The move operation preserves the active in-memory tag profile and emits removal/placement events.
-- The figure browser has a persistent favorite toggle. Favorites are stored in `sdmc:/switch/skyportal/favorites.txt` as full paths, so they work for Skylanders, Disney Infinity, and LEGO profiles. If a library is moved to a different folder, favorites may need to be re-marked.
+- The figure browser has a persistent favorite toggle. Favorites are stored in `sdmc:/switch/Toypad-Emu/favorites.txt` as full paths, so they work for Skylanders, Disney Infinity, and LEGO profiles. If a library is moved to a different folder, favorites may need to be re-marked.
 - Skylanders and Disney Infinity include a game filter cycling through known game labels plus Favorites. The scanner now searches subfolders recursively, so libraries organized into per-game folders are discoverable. For game filtering to work reliably, put dumps into folders named for the game or include a recognizable game name in the file name.
 - The filter is based on folder/file names, not an analysis of the dump contents. Unknown or generically named files may appear under All games but not under a specific game filter.
 
@@ -186,7 +229,7 @@ LEGO Dimensions mode is selectable from the main UI with **L** or **Switch mode*
 
 The public [Flipper-Zero-LD-Toypad-Emulator](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator) repository contains source code and a character/vehicle ID catalog; it does **not** publish a directory of raw character/vehicle NFC dump files. To make first-run testing possible without distributing third-party tag dumps, this app creates a small synthetic profile set the first time LEGO mode is selected, when no valid profiles exist. These profiles are protocol test fixtures generated from public IDs, not verified byte-for-byte dumps of physical tags.
 
-Profile directory: `sdmc:/switch/skyportal/lego_uids/`
+Profile directory: `sdmc:/switch/Toypad-Emu/lego_uids/`
 
 Each `.ldtag` file is 192 bytes:
 
@@ -195,7 +238,10 @@ Each `.ldtag` file is 192 bytes:
 - bytes `8..11`: figure/vehicle ID, little-endian
 - bytes `12..191`: 180-byte tag memory (45 four-byte pages)
 
-The built-in fixtures include Batman, Gandalf, Wyldstyle, Emmet, Harry Potter, Sonic, Chase McCain, and several vehicles. You can add profiles in the same format. Keep backups of edited files; in-game tag writes update the loaded profile and the app's normal save routine creates a `.bak` before overwriting an existing profile.
+The built-in fixtures cover every released character ID (1-77, 75 characters; the unreleased IDs 58 and 73 are skipped) and every vehicle and gadget build from the public token map (IDs 1000-1265, 266 in all). On first run with an empty folder everything is generated; on an existing install, missing characters and vehicles are added once (tracked by a hidden `.roster_v3` marker in the same folder), existing files are never overwritten, and files you delete stay deleted.
+
+In LEGO Dimensions mode the list has two filters: character / vehicle (the type button, or ZL) and favorites only (the star button, or ZR). They combine, so you can show only favorite vehicles, for example. The ToyPad screen is laid out like the real pad: a round center pad (position 2) and left and right square pads with three positions each; the D-pad moves between them.
+
 
 The ToyPad initialization frame (`55 0F B0 ...`) is a host-to-pad OUT packet. On USB reset, the emulator waits for that packet before sending tag events on IN. This avoids sending the host's initialization frame in the wrong direction or before the game is ready.
 
@@ -205,7 +251,7 @@ Host-side tests exercise HID descriptors, frame validation, encrypted model requ
 
 ## If the app crashes at launch: startup.log
 
-Each launch writes `sdmc:/switch/skyportal/startup.log`, one line per startup step (SDL init, window, renderer, fonts, USB
+Each launch writes `sdmc:/switch/Toypad-Emu/startup.log`, one line per startup step (SDL init, window, renderer, fonts, USB
 registration, worker thread), flushed to the SD card immediately. It also records how the app was started (applet type) and how
 much memory the process has. After a crash, **the last line is the step that was running**. Send that file, plus the Atmosphere
 crash report if one was written (`/atmosphere/crash_reports/*.log`, and the error code shown on screen, e.g. 2162-xxxx).

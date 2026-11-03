@@ -19,7 +19,7 @@ constexpr u64 kPollNs = 50000000ULL;           // wake the worker at least every
 constexpr u64 kInfPollNs = 4000000ULL;         // Infinity: also notice UI-queued packets within 4 ms
 constexpr u32 kResultCancelled = 0x828C;         // a transfer cancelled because the host went away
 constexpr u64 kBackoffNs = 100000000ULL;       // pause after a failed transfer post (100 ms)
-const char* const kConfigPath = "sdmc:/switch/skyportal/usb.ini";
+const char* const kConfigPath = "sdmc:/switch/Toypad-Emu/usb.ini";
 const char* const kBuildTag = "v17-auto-replug";
 constexpr u64 kStatusTimeoutNs = 300000000ULL;  // 0.3 s for a control status stage
 constexpr u64 kReplugGapNs = 1500000000ULL;    // how long a manual re-plug stays detached
@@ -71,7 +71,7 @@ void writeDefaultConfig(const char* path) {
     }
     FILE* f = std::fopen(path, "w");
     if (!f) return;
-    std::fputs("# Skylanders portal USB settings (read at app start; edit, then relaunch).\n"
+    std::fputs("# Toypad-Emu USB settings (read at app start; edit, then relaunch).\n"
                "# Polling interval of the IN endpoint (how often the console reads packets), 1..255.\n"
                "# full_interval is in ms at full speed. high_interval is an exponent at high/super speed\n"
                "# (2^(n-1) x 125 us, 1..16): 8 = 16 ms. The working Flipper build polls IN every 22 ms;\n"
@@ -189,7 +189,7 @@ Result UsbDevice::setupDevice(bool safeProfile) {
     ctrlStatus_ = readInt("ctrl_status", 1) != 0;
     autoReplug_ = readInt("auto_replug", 1) != 0;
     autoReplugMs_ = uint32_t(clamp(readInt("auto_replug_after", 8), 3, 120)) * 1000u;
-    note("skyportal %s %s%s", kBuildTag, modeName(mode_), safeProfile ? " (safe fallback profile)" : "");
+    note("Toypad-Emu %s %s%s", kBuildTag, modeName(mode_), safeProfile ? " (safe fallback profile)" : "");
     if (maxSpeedAsked < 2) note("max_speed=%d ignored (usb:ds needs every speed)", maxSpeedAsked);
     note("usb.ini: in %d/%d out %d/%d ep 0x%02X maxspeed %d usb11 %d str %d cs %d", inFull, inHigh, outFull,
          outHigh, outEp, maxSpeed, usb11 ? 1 : 0, strings ? 1 : 0, ctrlStatus_ ? 1 : 0);
