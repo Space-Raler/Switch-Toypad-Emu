@@ -1,6 +1,6 @@
-// Skylanders Portal for Switch: UI and app logic.
+// Toypad-Emu for Switch: UI and app logic.
 //
-// Put figure dumps (exactly 1024 bytes each) in sdmc:/switch/skyportal/figures/,
+// Put figure dumps (exactly 1024 bytes each) in sdmc:/switch/Toypad-Emu/figures/,
 // plug the Switch into the console/PC running the game with a USB-C cable, then
 // load figures onto the "portal" from this screen.
 #include <switch.h>
@@ -18,8 +18,8 @@ using namespace sky;
 
 namespace {
 
-const char* const kBaseDir = "sdmc:/switch/skyportal";
-const char* const kFigureDir = "sdmc:/switch/skyportal/figures";
+const char* const kBaseDir = "sdmc:/switch/Toypad-Emu";
+const char* const kFigureDir = "sdmc:/switch/Toypad-Emu/figures";
 
 enum class Pane { Files, Slots };
 enum class Page { Main, Debug };

@@ -1,6 +1,6 @@
 usb_device.o: \
- /home/spaceraleriscool/Downloads/skyportal-switch-v17/source/usb_device.cpp \
- /home/spaceraleriscool/Downloads/skyportal-switch-v17/source/usb_device.h \
+ /home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/usb_device.cpp \
+ /home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/usb_device.h \
  /opt/devkitpro/libnx/include/switch.h \
  /opt/devkitpro/libnx/include/switch/types.h \
  /opt/devkitpro/libnx/include/switch/result.h \
@@ -174,14 +174,14 @@ usb_device.o: \
  /opt/devkitpro/libnx/include/switch/crypto/sha1.h \
  /opt/devkitpro/libnx/include/switch/crypto/hmac.h \
  /opt/devkitpro/libnx/include/switch/crypto/crc.h \
- /home/spaceraleriscool/Downloads/skyportal-switch-v17/source/hid_function.h \
- /home/spaceraleriscool/Downloads/skyportal-switch-v17/source/portal.h \
- /home/spaceraleriscool/Downloads/skyportal-switch-v17/source/infinity/infinity_core.h \
- /home/spaceraleriscool/Downloads/skyportal-switch-v17/source/infinity_function.h \
- /home/spaceraleriscool/Downloads/skyportal-switch-v17/source/lego_dimensions_function.h \
- /home/spaceraleriscool/Downloads/skyportal-switch-v17/source/lego_dimensions_protocol.h \
- /home/spaceraleriscool/Downloads/skyportal-switch-v17/source/breadcrumb.h
-/home/spaceraleriscool/Downloads/skyportal-switch-v17/source/usb_device.h:
+ /home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/hid_function.h \
+ /home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/portal.h \
+ /home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/infinity/infinity_core.h \
+ /home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/infinity_function.h \
+ /home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/lego_dimensions_function.h \
+ /home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/lego_dimensions_protocol.h \
+ /home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/breadcrumb.h
+/home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/usb_device.h:
 /opt/devkitpro/libnx/include/switch.h:
 /opt/devkitpro/libnx/include/switch/types.h:
 /opt/devkitpro/libnx/include/switch/result.h:
@@ -355,10 +355,10 @@ usb_device.o: \
 /opt/devkitpro/libnx/include/switch/crypto/sha1.h:
 /opt/devkitpro/libnx/include/switch/crypto/hmac.h:
 /opt/devkitpro/libnx/include/switch/crypto/crc.h:
-/home/spaceraleriscool/Downloads/skyportal-switch-v17/source/hid_function.h:
-/home/spaceraleriscool/Downloads/skyportal-switch-v17/source/portal.h:
-/home/spaceraleriscool/Downloads/skyportal-switch-v17/source/infinity/infinity_core.h:
-/home/spaceraleriscool/Downloads/skyportal-switch-v17/source/infinity_function.h:
-/home/spaceraleriscool/Downloads/skyportal-switch-v17/source/lego_dimensions_function.h:
-/home/spaceraleriscool/Downloads/skyportal-switch-v17/source/lego_dimensions_protocol.h:
-/home/spaceraleriscool/Downloads/skyportal-switch-v17/source/breadcrumb.h:
+/home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/hid_function.h:
+/home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/portal.h:
+/home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/infinity/infinity_core.h:
+/home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/infinity_function.h:
+/home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/lego_dimensions_function.h:
+/home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/lego_dimensions_protocol.h:
+/home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/breadcrumb.h:

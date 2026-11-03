@@ -1,5 +1,5 @@
 main.o: \
- /home/spaceraleriscool/Downloads/skyportal-switch-v17/source/main.cpp \
+ /home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/main.cpp \
  /opt/devkitpro/libnx/include/switch.h \
  /opt/devkitpro/libnx/include/switch/types.h \
  /opt/devkitpro/libnx/include/switch/result.h \
@@ -225,16 +225,18 @@ main.o: \
  /opt/devkitpro/portlibs/switch/include/SDL2/SDL_misc.h \
  /opt/devkitpro/portlibs/switch/include/SDL2/SDL_ttf.h \
  /opt/devkitpro/portlibs/switch/include/SDL2/SDL.h \
- /home/spaceraleriscool/Downloads/skyportal-switch-v17/source/breadcrumb.h \
- /home/spaceraleriscool/Downloads/skyportal-switch-v17/source/figures.h \
- /home/spaceraleriscool/Downloads/skyportal-switch-v17/source/portal.h \
- /home/spaceraleriscool/Downloads/skyportal-switch-v17/source/infinity/infinity_figures.h \
- /home/spaceraleriscool/Downloads/skyportal-switch-v17/source/infinity/infinity_core.h \
- /home/spaceraleriscool/Downloads/skyportal-switch-v17/source/usb_device.h \
- /home/spaceraleriscool/Downloads/skyportal-switch-v17/source/hid_function.h \
- /home/spaceraleriscool/Downloads/skyportal-switch-v17/source/infinity_function.h \
- /home/spaceraleriscool/Downloads/skyportal-switch-v17/source/lego_dimensions_function.h \
- /home/spaceraleriscool/Downloads/skyportal-switch-v17/source/lego_dimensions_protocol.h
+ /home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/breadcrumb.h \
+ /home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/figures.h \
+ /home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/portal.h \
+ /home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/infinity/infinity_figures.h \
+ /home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/infinity/infinity_core.h \
+ /home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/usb_device.h \
+ /home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/hid_function.h \
+ /home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/infinity_function.h \
+ /home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/lego_dimensions_function.h \
+ /home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/lego_dimensions_protocol.h \
+ /home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/web_api.h \
+ /home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/web_server.h
 /opt/devkitpro/libnx/include/switch.h:
 /opt/devkitpro/libnx/include/switch/types.h:
 /opt/devkitpro/libnx/include/switch/result.h:
@@ -460,13 +462,15 @@ main.o: \
 /opt/devkitpro/portlibs/switch/include/SDL2/SDL_misc.h:
 /opt/devkitpro/portlibs/switch/include/SDL2/SDL_ttf.h:
 /opt/devkitpro/portlibs/switch/include/SDL2/SDL.h:
-/home/spaceraleriscool/Downloads/skyportal-switch-v17/source/breadcrumb.h:
-/home/spaceraleriscool/Downloads/skyportal-switch-v17/source/figures.h:
-/home/spaceraleriscool/Downloads/skyportal-switch-v17/source/portal.h:
-/home/spaceraleriscool/Downloads/skyportal-switch-v17/source/infinity/infinity_figures.h:
-/home/spaceraleriscool/Downloads/skyportal-switch-v17/source/infinity/infinity_core.h:
-/home/spaceraleriscool/Downloads/skyportal-switch-v17/source/usb_device.h:
-/home/spaceraleriscool/Downloads/skyportal-switch-v17/source/hid_function.h:
-/home/spaceraleriscool/Downloads/skyportal-switch-v17/source/infinity_function.h:
-/home/spaceraleriscool/Downloads/skyportal-switch-v17/source/lego_dimensions_function.h:
-/home/spaceraleriscool/Downloads/skyportal-switch-v17/source/lego_dimensions_protocol.h:
+/home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/breadcrumb.h:
+/home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/figures.h:
+/home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/portal.h:
+/home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/infinity/infinity_figures.h:
+/home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/infinity/infinity_core.h:
+/home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/usb_device.h:
+/home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/hid_function.h:
+/home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/infinity_function.h:
+/home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/lego_dimensions_function.h:
+/home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/lego_dimensions_protocol.h:
+/home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/web_api.h:
+/home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/web_server.h:

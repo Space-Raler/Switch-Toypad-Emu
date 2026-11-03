@@ -1,6 +1,6 @@
 figures.o: \
- /home/spaceraleriscool/Downloads/skyportal-switch-v17/source/figures.cpp \
- /home/spaceraleriscool/Downloads/skyportal-switch-v17/source/figures.h \
- /home/spaceraleriscool/Downloads/skyportal-switch-v17/source/portal.h
-/home/spaceraleriscool/Downloads/skyportal-switch-v17/source/figures.h:
-/home/spaceraleriscool/Downloads/skyportal-switch-v17/source/portal.h:
+ /home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/figures.cpp \
+ /home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/figures.h \
+ /home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/portal.h
+/home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/figures.h:
+/home/spaceraleriscool/Downloads/Switch-Toypad-Emu-main/source/portal.h:
